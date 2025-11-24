@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        // Pastikan tabel jobs ada dulu
+        if (Schema::hasTable('jobs')) {
+            Schema::table('jobs', function (Blueprint $table) {
+                // Tambah kolom image hanya kalau belum ada
+                if (!Schema::hasColumn('jobs', 'image')) {
+                    $table->string('image')->nullable()->after('description');
+                }
+            });
+        }
+    }
+
+    public function down(): void
+    {
+        if (Schema::hasTable('jobs')) {
+            Schema::table('jobs', function (Blueprint $table) {
+                if (Schema::hasColumn('jobs', 'image')) {
+                    $table->dropColumn('image');
+                }
+            });
+        }
+    }
+};
