@@ -20,12 +20,18 @@ class RecruitmentController extends Controller
     /**
      * Tampilkan daftar recruitment (untuk admin).
      */
+    // public function index()
+    // {
+    //     $pageTitle = 'Recruitments';
+    //     $recruitments = Recruitment::with('job')->latest()->get();
+
+    //     return view('admin.recruitments.index', compact('pageTitle', 'recruitments'));
+    // }
     public function index()
     {
         $pageTitle = 'Recruitments';
-        $recruitments = Recruitment::with('job')->latest()->get();
-
-        return view('admin.recruitments.index', compact('pageTitle', 'recruitments'));
+        confirmDelete();
+        return view('admin.recruitments.index', ['pageTitle' => $pageTitle]);
     }
 
     /**

@@ -15,10 +15,16 @@ class JobController extends Controller
         $this->middleware('auth');
     }
 
+    // public function index()
+    // {
+    //     $pageTitle = "Jobs List";
+    //     return view('admin.jobs.index', compact('pageTitle'));
+    // }
     public function index()
     {
-        $pageTitle = "Jobs List";
-        return view('admin.jobs.index', compact('pageTitle'));
+        $pageTitle = 'Jobs';
+        confirmDelete();
+        return view('admin.jobs.index', ['pageTitle' => $pageTitle]);
     }
 
     public function getJobs(Request $request)
@@ -39,81 +45,118 @@ class JobController extends Controller
                     </form>
                 ';
             })
-            ->rawColumns(['image','actions'])
+            ->rawColumns(['image', 'actions'])
             ->make(true);
     }
 
+    // public function store(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'title' => 'required',
+    //         'description' => 'required',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return back()->withErrors($validator)->withInput();
+    //     }
+
+    //     $file = $request->file('image');
+    //     $encryptedFilename = $file ? $file->hashName() : null;
+
+    //     if ($file) $file->store('public/jobs');
+
+    //     Job::create([
+    //         'title' => $request->title,
+    //         'description' => $request->description,
+    //         'image' => $encryptedFilename
+    //     ]);
+
+    //     Alert::success('Added Successfully', 'Job Added Successfully.');
+    //     return redirect()->route('admin.jobs.index');
+    // }
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'title' => 'required',
-            'description' => 'required',
-        ]);
+        $job = new Job();
+        $job->title = $request->title;
+        $job->description = $request->description;
+        // field lain…
 
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
+        // === Tambahkan DI SINI ===
+        if ($request->hasFile('image')) {
+            $filename = time() . '.' . $request->image->extension();
+            $request->image->storeAs('public/jobs', $filename);
+            $job->image = $filename;
         }
 
-        $file = $request->file('image');
-        $encryptedFilename = $file ? $file->hashName() : null;
+        $job->save();
 
-        if ($file) $file->store('public/jobs');
-
-        Job::create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'image' => $encryptedFilename
-        ]);
-
-        Alert::success('Added Successfully','Job Added Successfully.');
-        return redirect()->route('admin.jobs.index');
+        return redirect()->back()->with('success', 'Job created!');
     }
+
 
     public function edit($id)
     {
         $pageTitle = 'Edit Job';
         $job = Job::findOrFail($id);
-        return view('admin.jobs.edit', compact('pageTitle','job'));
+        return view('admin.jobs.edit', compact('pageTitle', 'job'));
     }
 
-    public function update(Request $request, $id)
+    // public function update(Request $request, $id)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'title' => 'required',
+    //         'description' => 'required'
+    //     ]);
+
+    //     if ($validator->fails()) return back()->withErrors($validator)->withInput();
+
+    //     $job = Job::findOrFail($id);
+    //     $file = $request->file('image');
+
+    //     if ($file) {
+    //         if ($job->image && Storage::exists('public/jobs/' . $job->image)) {
+    //             Storage::delete('public/jobs/' . $job->image);
+    //         }
+    //         $job->image = $file->hashName();
+    //         $file->store('public/jobs');
+    //     }
+
+    //     $job->title = $request->title;
+    //     $job->description = $request->description;
+    //     $job->save();
+
+    //     Alert::success('Updated Successfully', 'Job Updated Successfully.');
+    //     return redirect()->route('admin.jobs.index');
+    // }
+    public function update(Request $request, Job $job)
     {
-        $validator = Validator::make($request->all(), [
-            'title' => 'required',
-            'description' => 'required'
-        ]);
-
-        if ($validator->fails()) return back()->withErrors($validator)->withInput();
-
-        $job = Job::findOrFail($id);
-        $file = $request->file('image');
-
-        if ($file) {
-            if ($job->image && Storage::exists('public/jobs/'.$job->image)) {
-                Storage::delete('public/jobs/'.$job->image);
-            }
-            $job->image = $file->hashName();
-            $file->store('public/jobs');
-        }
-
         $job->title = $request->title;
         $job->description = $request->description;
+        // field lain…
+
+        // === Tambahkan DI SINI ===
+        if ($request->hasFile('image')) {
+            $filename = time() . '.' . $request->image->extension();
+            $request->image->storeAs('public/jobs', $filename);
+            $job->image = $filename;
+        }
+
         $job->save();
 
-        Alert::success('Updated Successfully','Job Updated Successfully.');
-        return redirect()->route('admin.jobs.index');
+        return redirect()->back()->with('success', 'Job updated!');
     }
+
 
     public function destroy($id)
     {
         $job = Job::findOrFail($id);
 
-        if ($job->image && Storage::exists('public/jobs/'.$job->image)) {
-            Storage::delete('public/jobs/'.$job->image);
+        if ($job->image && Storage::exists('public/jobs/' . $job->image)) {
+            Storage::delete('public/jobs/' . $job->image);
         }
 
         $job->delete();
-        Alert::success('Deleted Successfully','Job Deleted Successfully.');
+        Alert::success('Deleted Successfully', 'Job Deleted Successfully.');
         return redirect()->route('admin.jobs.index');
     }
 
