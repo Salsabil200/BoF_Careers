@@ -54,23 +54,32 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
 
     // Job management
-    Route::get('/admin/jobs', [JobController::class, 'index'])
-        ->name('admin.jobs.index');
+    Route::middleware(['auth', 'role:admin'])->group(function () {
 
-    Route::post('/admin/jobs/store', [JobController::class, 'store'])
-        ->name('admin.jobs.store');
+        // JOB PAGE
+        Route::get('/admin/jobs', [JobController::class, 'index'])
+            ->name('admin.jobs.index');
 
-    Route::get('/admin/getJobs', [JobController::class, 'getJobs'])
-        ->name('admin.jobs.get');
+        // DATATABLE AJAX
+        Route::get('/admin/getJobs', [JobController::class, 'getJobs'])
+            ->name('admin.jobs.get');
 
-    Route::get('/admin/jobs/{job}/edit', [JobController::class, 'edit'])
-        ->name('admin.jobs.edit');
+        // STORE
+        Route::post('/admin/jobs/store', [JobController::class, 'store'])
+            ->name('admin.jobs.store');
 
-    Route::put('/admin/jobs/{job}/update', [JobController::class, 'update'])
-        ->name('admin.jobs.update');
+        // EDIT
+        Route::get('/admin/jobs/{id}/edit', [JobController::class, 'edit'])
+            ->name('admin.jobs.edit');
 
-    Route::delete('/admin/jobs/{job}', [JobController::class, 'destroy'])
-        ->name('admin.jobs.destroy');
+        // UPDATE
+        Route::put('/admin/jobs/{id}', [JobController::class, 'update'])
+            ->name('admin.jobs.update');
+
+        // DELETE
+        Route::delete('/admin/jobs/{id}', [JobController::class, 'destroy'])
+            ->name('admin.jobs.destroy');
+    });
 });
 
 

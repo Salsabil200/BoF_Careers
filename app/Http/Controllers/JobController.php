@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Support\Facades\Storage;
+use RealRashid\SweetAlert\Facades\Alert;
 use App\Models\Job;
 
 class JobController extends Controller
@@ -15,18 +15,15 @@ class JobController extends Controller
         $this->middleware('auth');
     }
 
-    // public function index()
-    // {
-    //     $pageTitle = "Jobs List";
-    //     return view('admin.jobs.index', compact('pageTitle'));
-    // }
+    // INDEX
     public function index()
     {
         $pageTitle = 'Jobs';
         confirmDelete();
-        return view('admin.jobs.index', ['pageTitle' => $pageTitle]);
+        return view('admin.jobs.index', compact('pageTitle'));
     }
 
+    // DATATABLE DATA
     public function getJobs(Request $request)
     {
         $jobs = Job::query();
@@ -34,9 +31,11 @@ class JobController extends Controller
         return datatables()->of($jobs)
             ->addIndexColumn()
             ->addColumn('image', function ($job) {
-                return $job->image ? '<img src="' . asset('storage/jobs/' . $job->image) . '" width="70">' : '-';
+                return $job->image
+                    ? '<img src="' . asset('storage/jobs/' . $job->image) . '" width="70">'
+                    : '-';
             })
-            ->addColumn('actions', function ($job) {
+            ->addColumn('action', function ($job) {
                 return '
                     <a href="' . route('admin.jobs.edit', $job->id) . '" class="btn btn-sm btn-warning">Edit</a>
                     <form action="' . route('admin.jobs.destroy', $job->id) . '" method="POST" style="display:inline;">
@@ -45,43 +44,23 @@ class JobController extends Controller
                     </form>
                 ';
             })
-            ->rawColumns(['image', 'actions'])
+            ->rawColumns(['image', 'action'])
             ->make(true);
     }
 
-    // public function store(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'title' => 'required',
-    //         'description' => 'required',
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return back()->withErrors($validator)->withInput();
-    //     }
-
-    //     $file = $request->file('image');
-    //     $encryptedFilename = $file ? $file->hashName() : null;
-
-    //     if ($file) $file->store('public/jobs');
-
-    //     Job::create([
-    //         'title' => $request->title,
-    //         'description' => $request->description,
-    //         'image' => $encryptedFilename
-    //     ]);
-
-    //     Alert::success('Added Successfully', 'Job Added Successfully.');
-    //     return redirect()->route('admin.jobs.index');
-    // }
+    // STORE JOB
     public function store(Request $request)
     {
+        $request->validate([
+            'title'       => 'required',
+            'description' => 'required'
+        ]);
+
         $job = new Job();
         $job->title = $request->title;
         $job->description = $request->description;
-        // field lain…
 
-        // === Tambahkan DI SINI ===
+        // IMAGE
         if ($request->hasFile('image')) {
             $filename = time() . '.' . $request->image->extension();
             $request->image->storeAs('public/jobs', $filename);
@@ -90,52 +69,40 @@ class JobController extends Controller
 
         $job->save();
 
-        return redirect()->back()->with('success', 'Job created!');
+        Alert::success('Success', 'Job Created Successfully!');
+        return redirect()->back();
     }
 
-
+    // EDIT PAGE
     public function edit($id)
     {
         $pageTitle = 'Edit Job';
         $job = Job::findOrFail($id);
+
         return view('admin.jobs.edit', compact('pageTitle', 'job'));
     }
 
-    // public function update(Request $request, $id)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'title' => 'required',
-    //         'description' => 'required'
-    //     ]);
-
-    //     if ($validator->fails()) return back()->withErrors($validator)->withInput();
-
-    //     $job = Job::findOrFail($id);
-    //     $file = $request->file('image');
-
-    //     if ($file) {
-    //         if ($job->image && Storage::exists('public/jobs/' . $job->image)) {
-    //             Storage::delete('public/jobs/' . $job->image);
-    //         }
-    //         $job->image = $file->hashName();
-    //         $file->store('public/jobs');
-    //     }
-
-    //     $job->title = $request->title;
-    //     $job->description = $request->description;
-    //     $job->save();
-
-    //     Alert::success('Updated Successfully', 'Job Updated Successfully.');
-    //     return redirect()->route('admin.jobs.index');
-    // }
-    public function update(Request $request, Job $job)
+    // UPDATE JOB
+    public function update(Request $request, Job $job, $id)
     {
+        $request->validate([
+            'title'       => 'required',
+            'description' => 'required',
+            'image' => 'image|mimes:jpg,jpeg,png,webp|max:2048'
+        ]);
+
+        $job = Job::findOrFail($id);
+
         $job->title = $request->title;
         $job->description = $request->description;
-        // field lain…
 
-        // === Tambahkan DI SINI ===
+        // UPDATE IMAGE
         if ($request->hasFile('image')) {
+
+            if ($job->image && Storage::exists('public/jobs/' . $job->image)) {
+                Storage::delete('public/jobs/' . $job->image);
+            }
+
             $filename = time() . '.' . $request->image->extension();
             $request->image->storeAs('public/jobs', $filename);
             $job->image = $filename;
@@ -143,10 +110,11 @@ class JobController extends Controller
 
         $job->save();
 
-        return redirect()->back()->with('success', 'Job updated!');
+        Alert::success('Success', 'Job Updated Successfully!');
+        return redirect()->back();
     }
 
-
+    // DELETE JOB
     public function destroy($id)
     {
         $job = Job::findOrFail($id);
@@ -156,7 +124,8 @@ class JobController extends Controller
         }
 
         $job->delete();
-        Alert::success('Deleted Successfully', 'Job Deleted Successfully.');
+
+        Alert::success('Deleted', 'Job Deleted Successfully!');
         return redirect()->route('admin.jobs.index');
     }
 
