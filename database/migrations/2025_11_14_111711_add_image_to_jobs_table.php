@@ -8,25 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Pastikan tabel jobs ada dulu
-        if (Schema::hasTable('jobs')) {
-            Schema::table('jobs', function (Blueprint $table) {
-                // Tambah kolom image hanya kalau belum ada
-                if (!Schema::hasColumn('jobs', 'image')) {
-                    $table->string('image')->nullable()->after('description');
-                }
-            });
-        }
+        Schema::table('jobs', function (Blueprint $table) {
+            if (!Schema::hasColumn('jobs', 'image')) {
+                $table->string('image')->nullable()->after('description');
+            }
+        });
     }
 
     public function down(): void
     {
-        if (Schema::hasTable('jobs')) {
-            Schema::table('jobs', function (Blueprint $table) {
-                if (Schema::hasColumn('jobs', 'image')) {
-                    $table->dropColumn('image');
-                }
-            });
-        }
+        Schema::table('jobs', function (Blueprint $table) {
+            if (Schema::hasColumn('jobs', 'image')) {
+                $table->dropColumn('image');
+            }
+        });
     }
 };
